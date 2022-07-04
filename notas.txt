@@ -1,0 +1,23 @@
+Instalaciones:
+  pipenv shell
+  pipenv install flask-sqlalchemy
+  pipenv install flask
+  pipenv install flask-migrate flask-cors
+  pipenv install psycopg2-binary
+
+  flask db init
+  flask db migrate
+  flask db upgrade
+
+  comandos para hacer andar la bbdd:
+    python app.py
+    
+Esta pendiente:
+  Hacer post de otras tablas y probrar relaciones en el postgre
+  Agregar columnas de imagenes para el usuario, receta e ingredientes
+
+Relaciones probadas en SQL:
+  Usuario-Receta-Ingrediente
+  SELECT nombre, fecha_creacion, paso_a_paso FROM usuario JOIN receta ON usuario.id = receta.id_usuario OK
+
+
