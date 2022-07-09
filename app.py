@@ -1,20 +1,48 @@
+import json
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from models import Ingrediente, Receta, db, Usuario, Favorito #Ir probando e importar el resto
 from flask_cors import CORS
 from flask_migrate import Migrate
+from werkzeug.utils import secure_filename #borrar si no funca
+import os
 
 app = Flask(__name__)
 db.init_app(app)
 CORS(app) 
 Migrate(app,db) 
 
+# UPLOAD_FOLDER = '/img'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/proyectoFinal'
 
 
+#Funcion que revisa si la eztension es valida
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+#post de imagen
+@app.route('/upload_img_receta', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        return jsonify("Guardado")
+    return jsonify('Archivo no permitido')  
+
+
+
+@app.route('/uploads/<filename>')
+def send_uploaded_file(filename=''):
+    from flask import send_from_directory
+    return send_from_directory(app.config["IMAGE_UPLOADS"], filename)
 ################# TABLA USUARIOS ##########################
 
 @app.route('/usuarios',methods=['GET']) #todos los usuarios
@@ -93,8 +121,13 @@ def crea_receta():
     receta.id_usuario = request.json.get("id_usuario")
     receta.id_ingrediente = request.json.get("id_ingrediente")
     receta.nombre_receta = request.json.get("nombre_receta")
+    receta.imagen_receta=request.files['pic'] #borrar si no funca
     receta.fecha_creacion = request.json.get("fecha_creacion")
     receta.paso_a_paso = request.json.get("paso_a_paso")
+
+    filename=secure_filename(pic.filename) #borrar si no funca
+    mimetype=pic.mimetype #borrar si no funca
+    img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
 
     db.session.add(receta)
     db.session.commit()

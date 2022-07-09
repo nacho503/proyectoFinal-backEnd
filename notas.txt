@@ -10,6 +10,7 @@ Instalaciones:
   flask db upgrade
 
   comandos para hacer andar la bbdd:
+    pipenv shell y seleccionar interprete
     python app.py
     
 Esta pendiente:

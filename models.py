@@ -48,6 +48,7 @@ class Receta(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     nombre_receta = db.Column(db.String(250),nullable=False)
     fecha_creacion = db.Column(db.DateTime(250),nullable=False)
     paso_a_paso = db.Column(db.String(250),nullable=False)
+    imagen_receta=db.Column(db.Text,nullable=False)
     comentario_valor = db.relationship('Comentario_Valor', backref='receta', lazy=True)
     favorito = db.relationship('Favorito', backref='receta', lazy=True) 
 
