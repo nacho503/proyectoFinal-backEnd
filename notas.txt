@@ -1,4 +1,4 @@
-Instalaciones:
+Instalaciones: (usar gitbash)
   pipenv shell
   pipenv install flask-sqlalchemy
   pipenv install flask
