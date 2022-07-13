@@ -11,6 +11,7 @@ app = Flask(__name__)
 db.init_app(app)
 CORS(app) 
 Migrate(app,db) 
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 # UPLOAD_FOLDER = '/img'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -18,7 +19,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/proyectoFinal'
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + os.path.join(BASEDIR, "api_test.db")
 
 
 #Funcion que revisa si la eztension es valida
@@ -115,24 +116,24 @@ def recetas_todos():
     recetas=list(map(lambda receta: receta.serialize(),recetas))
     return jsonify(recetas),200 
 
-@app.route('/crear_receta',methods=['POST'])
-def crea_receta():
-    receta = Receta()
-    receta.id_usuario = request.json.get("id_usuario")
-    receta.id_ingrediente = request.json.get("id_ingrediente")
-    receta.nombre_receta = request.json.get("nombre_receta")
-    receta.imagen_receta=request.files['pic'] #borrar si no funca
-    receta.fecha_creacion = request.json.get("fecha_creacion")
-    receta.paso_a_paso = request.json.get("paso_a_paso")
+# @app.route('/crear_receta',methods=['POST'])
+# def crea_receta():
+#     receta = Receta()
+#     receta.id_usuario = request.json.get("id_usuario")
+#     receta.id_ingrediente = request.json.get("id_ingrediente")
+#     receta.nombre_receta = request.json.get("nombre_receta")
+#     receta.imagen_receta=request.files['pic'] #borrar si no funca
+#     receta.fecha_creacion = request.json.get("fecha_creacion")
+#     receta.paso_a_paso = request.json.get("paso_a_paso")
 
-    filename=secure_filename(pic.filename) #borrar si no funca
-    mimetype=pic.mimetype #borrar si no funca
-    img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
+#     filename=secure_filename(pic.filename) #borrar si no funca
+#     mimetype=pic.mimetype #borrar si no funca
+#     img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
 
-    db.session.add(receta)
-    db.session.commit()
+#     db.session.add(receta)
+#     db.session.commit()
 
-    return jsonify(receta.serialize()),200
+#     return jsonify(receta.serialize()),200
 
 
 
