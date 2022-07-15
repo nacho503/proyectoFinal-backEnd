@@ -54,9 +54,13 @@ def usuarios_todos():
 @app.route('/crear_usuario',methods=['POST'])
 def crea_usuario():
     usuario = Usuario()
-    usuario.nombre = request.json.get("nombre")
+    usuario.name = request.json.get("name")
+    usuario.last_name = request.json.get("last_name")
+    usuario.email = request.json.get("email")
+    usuario.country = request.json.get("country")
+    usuario.allergy = request.json.get("allergy")
+    usuario.user_name = request.json.get("user_name")
     usuario.password = request.json.get("password")
-    usuario.mail = request.json.get("mail")
 
     db.session.add(usuario)
     db.session.commit()
@@ -93,12 +97,13 @@ def ingredientes_todos():
 @app.route('/crear_ingrediente',methods=['POST'])
 def crea_ingrediente():
     ingrediente = Ingrediente()
-    ingrediente.nombre_ingrediente = request.json.get("nombre_ingrediente")
-    ingrediente.calorias = request.json.get("calorias")
-    ingrediente.carbohidratos = request.json.get("carbohidratos")
-    ingrediente.grasa = request.json.get("grasa")
-    ingrediente.proteinas = request.json.get("proteinas")
-    ingrediente.categoria = request.json.get("categoria")
+    ingrediente.ingredient_name = request.json.get("ingredient_name")
+    ingrediente.ingredient_portion = request.json.get("ingredient_portion")
+    # ingrediente.calorias = request.json.get("calorias")
+    # ingrediente.carbohidratos = request.json.get("carbohidratos")
+    # ingrediente.grasa = request.json.get("grasa")
+    # ingrediente.proteinas = request.json.get("proteinas")
+    # ingrediente.categoria = request.json.get("categoria")
 
     db.session.add(ingrediente)
     db.session.commit()
@@ -125,9 +130,9 @@ def crea_receta():
     receta.fecha_creacion = request.json.get("fecha_creacion")
     receta.paso_a_paso = request.json.get("paso_a_paso")
 
-    filename=secure_filename(pic.filename) #borrar si no funca
-    mimetype=pic.mimetype #borrar si no funca
-    img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
+    # filename=secure_filename(pic.filename) #borrar si no funca
+    # mimetype=pic.mimetype #borrar si no funca
+    # img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
 
     db.session.add(receta)
     db.session.commit()

@@ -1,31 +1,45 @@
+from enum import unique
 import mailbox
 from flask_sqlalchemy import SQLAlchemy
 
 #instacia de sqlalchemy
 db = SQLAlchemy()
 
-#####################################
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°USER
 class Usuario(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50),nullable=False)
-    password = db.Column(db.String(20),nullable=False)
-    mail=db.Column(db.String(50),nullable=False)
-    favoritos=db.relationship('Favorito',backref="usuario", lazy=True)
-    receta=db.relationship('Receta',backref="usuario", lazy=True)
-    despensa=db.relationship('Despensa',backref="usuario", lazy=True)
+    name = db.Column(db.String(50),nullable=False)
+    last_name = db.Column(db.String(50),nullable=False)
+    email = db.Column(db.String(50),nullable=False, unique=True)
+    country = db.Column(db.String(50),nullable=False)
+    allergy = db.Column(db.String(50),nullable=False)
+    user_name =db.Column(db.String(50),nullable=False, unique=True)
+    password =db.Column(db.String(50),nullable=False)
+
+    favoritos = db.relationship('Favorito',backref="usuario", lazy=True)
+    receta = db.relationship('Receta',backref="usuario", lazy=True)
+    despensa = db.relationship('Despensa',backref="usuario", lazy=True)
     comentario_valor=db.relationship('Comentario_Valor',backref="usuario", lazy=True)
 
     def __repr__(self):
-        return "<User %r>" % self.nombre
+        return "<User %r>" % self.email
 
     def serialize(self):
         return {
             "id":self.id,
-            "nombre": self.nombre,
-            "password": self.password,
-            "mail":self.mail
+            "name": self.name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "country": self.country,
+            "allergy": self.allergy,
+            "user_name": self.user_name,
+            "password": self.password
         }
 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°FAVORITE
 class Favorito(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False) 
@@ -41,6 +55,8 @@ class Favorito(db.Model):
             "id_receta": self.id_receta
         }
 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°RECIPE
 class Receta(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
@@ -66,31 +82,37 @@ class Receta(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
         }
 
 
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°INGREDINT
 class Ingrediente(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
-    nombre_ingrediente = db.Column(db.String(250),nullable=False)
-    calorias = db.Column(db.Integer,nullable=False)
-    carbohidratos = db.Column(db.Integer,nullable=False)
-    grasa = db.Column(db.Integer,nullable=False)
-    proteinas = db.Column(db.Integer,nullable=False)
-    categoria = db.Column(db.String(250),nullable=False)
+    ingredient_name = db.Column(db.String(50),nullable=False, unique=True)
+    ingredient_portion = db.Column(db.String(20), nullable=False)
+    # calorias = db.Column(db.Integer,nullable=False)
+    # carbohidratos = db.Column(db.Integer,nullable=False)
+    # grasa = db.Column(db.Integer,nullable=False)
+    # proteinas = db.Column(db.Integer,nullable=False)
+    # categoria = db.Column(db.String(250),nullable=False)
+
     despensa = db.relationship('Despensa', backref='ingrediente', lazy=True)
     receta = db.relationship('Receta', backref='ingrediente', lazy=True) 
 
     def __repr__(self):
-        return "<Ingrediente %r>" % self.nombre #no se cual va aqui
+        return "<Ingrediente %r>" % self.ingredient_name #no se cual va aqui
 
     def serialize(self):
         return {
             "id":self.id,
-            "nombre_ingrediente": self.nombre_ingrediente,
-            "calorias": self.calorias,
-            "carbohidratos": self.carbohidratos,
-            "grasa": self.grasa,
-            "proteinas": self.proteinas,
-            "categoria": self.categoria
+            "ingredient_name": self.ingredient_name,
+            "ingredient_portion": self.ingredient_portion,
+            # "calorias": self.calorias,
+            # "carbohidratos": self.carbohidratos,
+            # "grasa": self.grasa,
+            # "proteinas": self.proteinas,
+            # "categoria": self.categoria
         }
 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°COMMIT AND VALUE
 class Comentario_Valor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
@@ -112,6 +134,7 @@ class Comentario_Valor(db.Model):
         }
 
 
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°PANTRY
 class Despensa(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
