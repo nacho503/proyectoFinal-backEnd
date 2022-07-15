@@ -5,126 +5,127 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 #####################################
-class Usuario(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
+class User(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50),nullable=False)
+    name = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(20),nullable=False)
     mail=db.Column(db.String(50),nullable=False)
-    favoritos=db.relationship('Favorito',backref="usuario", lazy=True)
-    receta=db.relationship('Receta',backref="usuario", lazy=True)
-    despensa=db.relationship('Despensa',backref="usuario", lazy=True)
-    comentario_valor=db.relationship('Comentario_Valor',backref="usuario", lazy=True)
+    favorites=db.relationship('Favorite',backref="user", lazy=True)
+    recipe=db.relationship('Recipe',backref="user", lazy=True)
+    pantry=db.relationship('Pantry',backref="user", lazy=True)
+    comment_value=db.relationship('Comment_Value',backref="user", lazy=True)
 
     def __repr__(self):
-        return "<User %r>" % self.nombre
+        return "<User %r>" % self.name
 
     def serialize(self):
         return {
             "id":self.id,
-            "nombre": self.nombre,
+            "name": self.name,
             "password": self.password,
             "mail":self.mail
         }
 
-class Favorito(db.Model):
+class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False) 
-    id_receta = db.Column(db.Integer, db.ForeignKey('receta.id'), nullable=False)
+    id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) 
+    id_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
 
     def __repr__(self):
-        return "<Favorito %r>" % self.id #no se cual va aqui
+        return "<Favorite %r>" % self.id #no se cual va aqui
 
     def serialize(self):
         return {
             "id":self.id,
-            "id_usuario": self.id_usuario,
-            "id_receta": self.id_receta
+            "id_user": self.id_User,
+            "id_recipe": self.id_recipe
         }
 
-class Receta(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
+class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    id_ingrediente = db.Column(db.Integer, db.ForeignKey('ingrediente.id'), nullable=False)
-    nombre_receta = db.Column(db.String(250),nullable=False)
-    fecha_creacion = db.Column(db.DateTime(250),nullable=False)
-    paso_a_paso = db.Column(db.String(250),nullable=False)
-    imagen_receta=db.Column(db.Text,nullable=False)
-    comentario_valor = db.relationship('Comentario_Valor', backref='receta', lazy=True)
-    favorito = db.relationship('Favorito', backref='receta', lazy=True) 
+    id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id_ingredient = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
+    ingredient_quantity=db.Column(db.Integer,nullable=False)
+    name_recipe = db.Column(db.String(250),nullable=False)
+    date_creation = db.Column(db.DateTime(250),nullable=True)
+    step_by_step = db.Column(db.String(250),nullable=False)
+    image_recipe=db.Column(db.Text,nullable=True)
+    comment_value = db.relationship('Comment_Value', backref='recipe', lazy=True)
+    favorite = db.relationship('Favorite', backref='recipe', lazy=True) 
 
     def __repr__(self):
-        return "<Receta %r>" % self.nombre #no se cual va aqui
+        return "<Recipe %r>" % self.name #no se cual va aqui
 
     def serialize(self):
         return {
             "id":self.id,
-            "id_usuario": self.id_usuario,
-            "id_ingrediente": self.id_ingrediente,
-            "nombre_receta": self.nombre_receta,
-            "fecha_creacion": self.fecha_creacion,
-            "paso_a_paso": self.paso_a_paso
-        }
-
-
-class Ingrediente(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
-    id = db.Column(db.Integer, primary_key=True)
-    nombre_ingrediente = db.Column(db.String(250),nullable=False)
-    calorias = db.Column(db.Integer,nullable=False)
-    carbohidratos = db.Column(db.Integer,nullable=False)
-    grasa = db.Column(db.Integer,nullable=False)
-    proteinas = db.Column(db.Integer,nullable=False)
-    categoria = db.Column(db.String(250),nullable=False)
-    despensa = db.relationship('Despensa', backref='ingrediente', lazy=True)
-    receta = db.relationship('Receta', backref='ingrediente', lazy=True) 
-
-    def __repr__(self):
-        return "<Ingrediente %r>" % self.nombre #no se cual va aqui
-
-    def serialize(self):
-        return {
-            "id":self.id,
-            "nombre_ingrediente": self.nombre_ingrediente,
-            "calorias": self.calorias,
-            "carbohidratos": self.carbohidratos,
-            "grasa": self.grasa,
-            "proteinas": self.proteinas,
-            "categoria": self.categoria
-        }
-
-class Comentario_Valor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    id_receta = db.Column(db.Integer, db.ForeignKey('receta.id'), nullable=False)
-    comentario = db.Column(db.String(250),nullable=False)
-    valoracion = db.Column(db.Integer,nullable=False) 
-
-    def __repr__(self):
-        return "<Comentario_Valor %r>" % self.comentario 
-
-    def serialize(self):
-        return {
-            "id":self.id,
-            "id_usuario": self.id_usuario,
-            "id_receta": self.id_receta,
-            "id_receta": self.id_receta,
-            "comentario": self.comentario,
-            "valoracion": self.valoracion
+            "id_user": self.id_User,
+            "id_ingredient": self.id_ingredient,
+            "name_recipe": self.name_recipe,
+            "date_creation": self.date_creation,
+            "step_by_step": self.step_by_step
         }
 
 
-class Despensa(db.Model):
+class Ingredient(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     id = db.Column(db.Integer, primary_key=True)
-    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    id_ingrediente = db.Column(db.Integer, db.ForeignKey('ingrediente.id'), nullable=False)
-    cantidad = db.Column(db.Integer,nullable=False) 
+    name_ingredient = db.Column(db.String(250),nullable=False)
+    calories = db.Column(db.Integer,nullable=True)
+    carbs = db.Column(db.Integer,nullable=True)
+    grease = db.Column(db.Integer,nullable=True)
+    proteins = db.Column(db.Integer,nullable=True)
+    category = db.Column(db.String(250),nullable=True)
+    pantry = db.relationship('Pantry', backref='ingredient', lazy=True)
+    recipe = db.relationship('Recipe', backref='ingredient', lazy=True) 
 
     def __repr__(self):
-        return "<Despensa %r>" % self.cantidad
+        return "<Ingredient %r>" % self.name #no se cual va aqui
 
     def serialize(self):
         return {
             "id":self.id,
-            "id_usuario": self.id_usuario,
-            "id_ingrediente": self.id_ingrediente,
-            "cantidad": self.cantidad
+            "name_ingredient": self.name_ingredient,
+            "calories": self.calories,
+            "carbs": self.carbs,
+            "grease": self.grease,
+            "proteins": self.proteins,
+            "category": self.category
+        }
+
+class Comment_Value(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    comment = db.Column(db.String(250),nullable=True)
+    value = db.Column(db.Integer,nullable=True) 
+
+    def __repr__(self):
+        return "<Comment_Value %r>" % self.comment 
+
+    def serialize(self):
+        return {
+            "id":self.id,
+            "id_user": self.id_User,
+            "id_recipe": self.id_recipe,
+            "id_recipe": self.id_recipe,
+            "comment": self.comment,
+            "value": self.value
+        }
+
+
+class Pantry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id_ingredient = db.Column(db.Integer, db.ForeignKey('ingredient.id'), nullable=False)
+    quantity = db.Column(db.Integer,nullable=False) 
+
+    def __repr__(self):
+        return "<Pantry %r>" % self.quantity
+
+    def serialize(self):
+        return {
+            "id":self.id,
+            "id_user": self.id_User,
+            "id_ingredient": self.id_ingredient,
+            "quantity": self.quantity
         }

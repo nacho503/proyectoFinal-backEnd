@@ -1,4 +1,4 @@
-Instalaciones: (usar gitbash)
+Instalaciones: (usar gitbash) y BORRAR EL ARCHIVO MIGRATION ANTES
   pipenv shell
   pipenv install flask-sqlalchemy
   pipenv install flask
@@ -15,7 +15,6 @@ Instalaciones: (usar gitbash)
     
 Esta pendiente:
   Hacer post de otras tablas y probrar relaciones en el postgre
-  Agregar columnas de imagenes para el usuario, receta e ingredientes
 
 Relaciones probadas en SQL:
   Usuario-Receta-Ingrediente
