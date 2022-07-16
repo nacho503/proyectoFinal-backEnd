@@ -13,8 +13,8 @@ class User(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     email = db.Column(db.String(50),nullable=False, unique=True)
     country = db.Column(db.String(50),nullable=False)
     allergy = db.Column(db.String(50),nullable=False)
-    user_name =db.Column(db.String(50),nullable=False, unique=True)
-    password =db.Column(db.String(50),nullable=False)
+    user_name = db.Column(db.String(50),nullable=False, unique=True)
+    password = db.Column(db.String(50),nullable=False)
 
     favorites = db.relationship('Favorite',backref="user", lazy=True)
     recipe = db.relationship('Recipe',backref="user", lazy=True)

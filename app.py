@@ -21,7 +21,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/proyectoFinal'
 
 
-#Funcion que revisa si la eztension es valida
+#Funcion que revisa si la extension es valida
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -47,14 +47,14 @@ def send_uploaded_file(filename=''):
 
 @app.route('/users',methods=['GET']) #todos los users
 def users_todos():
-    users=User.query.all()
-    users=list(map(lambda user: user.serialize(),users))
+    users = User.query.all()
+    users = list(map(lambda user: user.serialize(),users))
     return jsonify(users),200 
 
 
 @app.route('/create_user',methods=['POST'])
-def create_user():
-    user =  user()
+def crea_user():
+    user =  User()
     user.name = request.json.get("name")
     user.last_name = request.json.get("last_name")
     user.email = request.json.get("email") 
@@ -98,7 +98,7 @@ def ingredient_todos():
 
 
 @app.route('/crete_ingredient',methods=['POST'])
-def create_ingrediente():
+def crea_ingrediente():
     ingredient = Ingredient()
     ingredient.ingredient_name = request.json.get("ingredient_name")
     ingredient.ingredient_portion = request.json.get("ingredient_portion")
@@ -119,8 +119,8 @@ def create_ingrediente():
 
 @app.route('/recipes',methods=['GET']) #todos los users
 def recipes_todos():
-    recipes=Recipe.query.all()
-    recipes=list(map(lambda recipe: recipe.serialize(),recipes))
+    recipes = Recipe.query.all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
     return jsonify(recipes),200 
 
 @app.route('/create_recipe',methods=['POST'])
@@ -128,7 +128,7 @@ def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
     recipe.id_ingredient = request.json.get("id_ingredient")
-    ingredient_quantity=request.json.get("ingredient_quantity")
+    #ingredient_quantity=request.json.get("ingredient_quantity")
     recipe.name_recipe = request.json.get("name_recipe")
     recipe.image_recipe=request.files['pic'] #borrar si no funca
     recipe.date_creation = request.json.get("date_creation")
