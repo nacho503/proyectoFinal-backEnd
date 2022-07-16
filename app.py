@@ -1,7 +1,7 @@
 import json
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingrediente, Receta, db, Usuario, Favorito #Ir probando e importar el resto
+from models import Ingredient, Recipe, db, User, Favorite #Ir probando e importar el resto
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
@@ -27,8 +27,8 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-#post de imagen
-@app.route('/upload_img_receta', methods=['POST'])
+#post de image
+@app.route('/upload_img_recipe', methods=['POST'])
 def upload_file():
     file = request.files['file']
     if file and allowed_file(file.filename):
@@ -43,101 +43,105 @@ def upload_file():
 def send_uploaded_file(filename=''):
     from flask import send_from_directory
     return send_from_directory(app.config["IMAGE_UPLOADS"], filename)
-################# TABLA USUARIOS ##########################
+################# TABLA USERS ##########################
 
-@app.route('/usuarios',methods=['GET']) #todos los usuarios
-def usuarios_todos():
-    usuarios=Usuario.query.all()
-    usuarios=list(map(lambda usuario: usuario.serialize(),usuarios))
-    return jsonify(usuarios),200 
+@app.route('/users',methods=['GET']) #todos los users
+def users_todos():
+    users=User.query.all()
+    users=list(map(lambda user: user.serialize(),users))
+    return jsonify(users),200 
 
-@app.route('/crear_usuario',methods=['POST'])
-def crea_usuario():
-    usuario = Usuario()
-    usuario.name = request.json.get("name")
-    usuario.last_name = request.json.get("last_name")
-    usuario.email = request.json.get("email")
-    usuario.country = request.json.get("country")
-    usuario.allergy = request.json.get("allergy")
-    usuario.user_name = request.json.get("user_name")
-    usuario.password = request.json.get("password")
 
-    db.session.add(usuario)
+@app.route('/create_user',methods=['POST'])
+def create_user():
+    user =  user()
+    user.name = request.json.get("name")
+    user.last_name = request.json.get("last_name")
+    user.email = request.json.get("email") 
+    user.country = request.json.get("country")
+    user.allergy = request.json.get("allergy") 
+    user.user_name = request.json.get("user_name")
+    user.password = request.json.get("password")
+
+
+    db.session.add(user)
     db.session.commit()
 
-    return jsonify(usuario.serialize()),200
+    return jsonify(user.serialize()),200
 
-################# TABLA FAVORITO ##########################
+################# TABLA FAVORITE ##########################
 
-@app.route('/favoritos',methods=['GET']) #todos los usuarios
-def favoritos_todos():
-    favoritos=Favorito.query.all()
-    favoritos=list(map(lambda favorito: favorito.serialize(),favoritos))
-    return jsonify(favoritos),200 
+@app.route('/favorites',methods=['GET']) #todos los users
+def favorites_todos():
+    favorites=Favorite.query.all()
+    favorites=list(map(lambda favorite: favorite.serialize(),favorites))
+    return jsonify(favorites),200 
 
-@app.route('/crear_favorito',methods=['POST'])
-def crea_favorito():
-    favorito = Favorito()
-    favorito.id_usuario = request.json.get("id_usuario")
-    favorito.id_receta = request.json.get("id_receta")
+@app.route('/create_favorite',methods=['POST'])
+def crea_favorite():
+    favorite = Favorite()
+    favorite.id_user = request.json.get("id_user")
+    favorite.id_recipe = request.json.get("id_recipe")
 
-    db.session.add(favorito)
+    db.session.add(favorite)
     db.session.commit()
 
-    return jsonify(favorito.serialize()),200
+    return jsonify(favorite.serialize()),200
 
 ################# TABLA IGREDIENTE ##########################
 
-@app.route('/ingredientes',methods=['GET']) #todos los usuarios
-def ingredientes_todos():
-    ingredientes=Ingrediente.query.all()
-    ingredientes=list(map(lambda ingrediente: ingrediente.serialize(),ingredientes))
-    return jsonify(ingredientes),200 
+@app.route('/ingredient',methods=['GET']) #todos los users
+def ingredient_todos():
+    ingredient=Ingredient.query.all()
+    ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
+    return jsonify(ingredient),200 
 
-@app.route('/crear_ingrediente',methods=['POST'])
-def crea_ingrediente():
-    ingrediente = Ingrediente()
-    ingrediente.ingredient_name = request.json.get("ingredient_name")
-    ingrediente.ingredient_portion = request.json.get("ingredient_portion")
+
+@app.route('/crete_ingredient',methods=['POST'])
+def create_ingrediente():
+    ingredient = Ingredient()
+    ingredient.ingredient_name = request.json.get("ingredient_name")
+    ingredient.ingredient_portion = request.json.get("ingredient_portion")
     # ingrediente.calorias = request.json.get("calorias")
     # ingrediente.carbohidratos = request.json.get("carbohidratos")
     # ingrediente.grasa = request.json.get("grasa")
     # ingrediente.proteinas = request.json.get("proteinas")
     # ingrediente.categoria = request.json.get("categoria")
 
-    db.session.add(ingrediente)
+    db.session.add(ingredient)
     db.session.commit()
 
-    return jsonify(ingrediente.serialize()),200
+    return jsonify(ingredient.serialize()),200
 
 
-################# TABLA RECETA ##########################
+################# TABLA RECIPE ##########################
 
 
-@app.route('/recetas',methods=['GET']) #todos los usuarios
-def recetas_todos():
-    recetas=Receta.query.all()
-    recetas=list(map(lambda receta: receta.serialize(),recetas))
-    return jsonify(recetas),200 
+@app.route('/recipes',methods=['GET']) #todos los users
+def recipes_todos():
+    recipes=Recipe.query.all()
+    recipes=list(map(lambda recipe: recipe.serialize(),recipes))
+    return jsonify(recipes),200 
 
-@app.route('/crear_receta',methods=['POST'])
-def crea_receta():
-    receta = Receta()
-    receta.id_usuario = request.json.get("id_usuario")
-    receta.id_ingrediente = request.json.get("id_ingrediente")
-    receta.nombre_receta = request.json.get("nombre_receta")
-    receta.imagen_receta=request.files['pic'] #borrar si no funca
-    receta.fecha_creacion = request.json.get("fecha_creacion")
-    receta.paso_a_paso = request.json.get("paso_a_paso")
+@app.route('/create_recipe',methods=['POST'])
+def crea_recipe():
+    recipe = Recipe()
+    recipe.id_user = request.json.get("id_user")
+    recipe.id_ingredient = request.json.get("id_ingredient")
+    ingredient_quantity=request.json.get("ingredient_quantity")
+    recipe.name_recipe = request.json.get("name_recipe")
+    recipe.image_recipe=request.files['pic'] #borrar si no funca
+    recipe.date_creation = request.json.get("date_creation")
+    recipe.step_by_step = request.json.get("step_by_step")
 
     # filename=secure_filename(pic.filename) #borrar si no funca
     # mimetype=pic.mimetype #borrar si no funca
     # img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
 
-    db.session.add(receta)
+    db.session.add(recipe)
     db.session.commit()
 
-    return jsonify(receta.serialize()),200
+    return jsonify(recipe.serialize()),200
 
 
 
