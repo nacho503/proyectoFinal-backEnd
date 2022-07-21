@@ -1,24 +1,33 @@
-import json
+import os
+from click import password_option
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingredient, Recipe, db, User, Favorite #Ir probando e importar el resto
+from models import Ingredient, Recipe, db, User, Favorite, Profile 
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
-import os
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+import re
+
 
 app = Flask(__name__)
 db.init_app(app)
 CORS(app) 
 Migrate(app,db) 
+jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
 
 # UPLOAD_FOLDER = '/img'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|APP CONFIG|
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/proyectoFinal'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_j'
+app.config['SECRET_KEY'] = 'super-secreta' #bccypt
+app.config['JWT_SECRET_KEY'] = 'mas-secreta-aun' #jwt
 
 
 #Funcion que revisa si la extension es valida
@@ -43,8 +52,13 @@ def upload_file():
 def send_uploaded_file(filename=''):
     from flask import send_from_directory
     return send_from_directory(app.config["IMAGE_UPLOADS"], filename)
-################# TABLA USERS ##########################
 
+
+
+############################################ TABLA USERS #####################################
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+#get all users
 @app.route('/users',methods=['GET']) #todos los users
 def users_todos():
     users = User.query.all()
@@ -52,24 +66,140 @@ def users_todos():
     return jsonify(users),200 
 
 
-@app.route('/create_user',methods=['POST'])
-def crea_user():
-    user =  User()
-    user.name = request.json.get("name")
-    user.last_name = request.json.get("last_name")
-    user.email = request.json.get("email") 
-    user.country = request.json.get("country")
-    user.allergy = request.json.get("allergy") 
-    user.user_name = request.json.get("user_name")
-    user.password = request.json.get("password")
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#create a user
+email_reg = '([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+'
+password_reg = '^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$'
 
 
-    db.session.add(user)
-    db.session.commit()
+@app.route('/user', methods=['POST'])
+def create_user():
 
-    return jsonify(user.serialize()),200
+    email = request.json.get('email')
+    password = request.json.get('password')
+    last_name = request.json.get('last_name')
+    name = request.json.get("name")
+    country = request.json.get("country")
+    allergy = request.json.get("allergy")
+    user_name = request.json.get("user_name") 
 
-################# TABLA FAVORITE ##########################
+    if email != '' and re.search(email_reg, email):
+        user = User.query.filter_by(email = email).first()
+        if user is not None:
+          
+            return jsonify({
+                'msg':'user already exists'
+           }), 400
+
+        else:
+            if password != '' and re.search(password_reg, password):
+                user = User()
+                user.email = email
+                user.name = name
+                user.last_name = last_name
+                user.country = country
+                user.allergy = allergy
+                user.user_name = user_name
+               
+                
+                password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
+                user.password = password_hash
+
+                db.session.add(user) 
+                db.session.commit()
+
+                return  jsonify({
+                    "msg":"succes user created"
+                }),200
+            else:
+                return jsonify({
+                    "msg":"wrong password format"
+                }), 400 
+    else:
+        return jsonify({
+              "msg":"wrong password format"
+        }), 400   
+
+        # @app.route('/create_user',methods=['POST'])
+        # def crea_user():
+        #     user =  User()
+        #     user.name = request.json.get("name")
+        #     user.last_name = request.json.get("last_name")
+        #     user.email = request.json.get("email") 
+        #     user.country = request.json.get("country")
+        #     user.allergy = request.json.get("allergy")  
+        #     user.user_name = request.json.get("user_name")
+        #     user.password = request.json.get("password")
+
+        #     db.session.add(user)
+        #     db.session.commit()
+
+        #     return jsonify(user.serialize()),200
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#login user with autentication
+@app.route('/login', methods=['POST'])
+def login():     
+    email = request.json.get('email')
+    password = request.json.get('password')
+    if password  == '' and email == '':
+        return jsonify({
+            "msg": 'email or password empty'
+        }),400
+    else: 
+        user = User.query.filter_by( email = email ).first()
+        if user is not  None:
+            user_password = user.password
+            check_password = bcrypt.check_password_hash(user_password, password)
+            if check_password:
+                access_token = create_access_token(identity = email)
+                return jsonify({
+                    'user': user.serialize(),
+                    'access_token': access_token
+                }), 200
+            else:
+                return jsonify ({
+                    'msg': 'email or password is invalid'
+                }), 400  
+        else:
+            return jsonify({
+                "msg": "user not found, go to register"
+            }), 400  
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+#get data of a user
+
+@app.route('/me', methods=['GET'])
+@jwt_required()
+def me():
+    user = get_jwt_identity()       
+    return jsonify(user),200    
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#profile creation with autentication required
+# @app.route('/create_profile', methods=['POST'])
+# @jwt_required()
+# def create_profile():
+#     identity = get_jwt_identity()
+#     user = User.query.filter_by(email = identity).first()
+#     profile = Profile()
+#     profile.name = request.json.get('name')
+#     profile.last_name = request.json.get('last_name')
+#     profile.country = request.json.get('country')
+#     profile.allergy = request.json.get('allergy')
+#     profile.user_name = request.json.get('user_name')
+     
+#     return jsonify({
+#                     'user': profile.user_name,
+#                     'country': profile.country
+#                 }), 200
+
+
+
+
+############################################ TABLA FAVORITE #####################################
+
 
 @app.route('/favorites',methods=['GET']) #todos los users
 def favorites_todos():
@@ -98,15 +228,12 @@ def ingredient_todos():
 
 
 @app.route('/crete_ingredient',methods=['POST'])
+@jwt_required()
 def crea_ingrediente():
     ingredient = Ingredient()
     ingredient.ingredient_name = request.json.get("ingredient_name")
     ingredient.ingredient_portion = request.json.get("ingredient_portion")
-    # ingrediente.calorias = request.json.get("calorias")
-    # ingrediente.carbohidratos = request.json.get("carbohidratos")
-    # ingrediente.grasa = request.json.get("grasa")
-    # ingrediente.proteinas = request.json.get("proteinas")
-    # ingrediente.categoria = request.json.get("categoria")
+    ingredient.ingredient_measure = request.json.get("ingredient_measure")
 
     db.session.add(ingredient)
     db.session.commit()
@@ -124,6 +251,7 @@ def recipes_todos():
     return jsonify(recipes),200 
 
 @app.route('/create_recipe',methods=['POST'])
+@jwt_required()
 def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
