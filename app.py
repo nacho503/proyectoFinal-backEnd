@@ -161,25 +161,6 @@ def me():
     user = get_jwt_identity()       
     return jsonify(user),200    
 
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
-#profile creation with autentication required
-# @app.route('/create_profile', methods=['POST'])
-# @jwt_required()
-# def create_profile():
-#     identity = get_jwt_identity()
-#     user = User.query.filter_by(email = identity).first()
-#     profile = Profile()
-#     profile.name = request.json.get('name')
-#     profile.last_name = request.json.get('last_name')
-#     profile.country = request.json.get('country')
-#     profile.allergy = request.json.get('allergy')
-#     profile.user_name = request.json.get('user_name')
-     
-#     return jsonify({
-#                     'user': profile.user_name,
-#                     'country': profile.country
-#                 }), 200
-
 
 
 
