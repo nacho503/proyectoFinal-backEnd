@@ -1,7 +1,9 @@
+from audioop import avg
 import json
+from pickle import LIST
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingredient, Recipe, db, User, Favorite #Ir probando e importar el resto
+from models import Ingredient, Recipe, db, User, Favorite,Comment_Value #Ir probando e importar el resto
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
@@ -13,12 +15,14 @@ CORS(app)
 Migrate(app,db) 
 
 # UPLOAD_FOLDER = '/img'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/finalProyect'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/finalProyect'
+
+
 
 
 #Funcion que revisa si la eztension es valida
@@ -120,22 +124,77 @@ def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
     recipe.id_ingredient = request.json.get("id_ingredient")
-    ingredient_quantity=request.json.get("ingredient_quantity")
+    recipe.ingredient_quantity=request.json.get("ingredient_quantity")
     recipe.name_recipe = request.json.get("name_recipe")
-    recipe.image_recipe=request.files['pic'] #borrar si no funca
     recipe.date_creation = request.json.get("date_creation")
     recipe.step_by_step = request.json.get("step_by_step")
+    # recipe.image_recipe=request.files['pic'] #borrar si no funca
+   
 
-    filename=secure_filename(pic.filename) #borrar si no funca
-    mimetype=pic.mimetype #borrar si no funca
-    img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
+    # filename=secure_filename(pic.filename) #borrar si no funca
+    # mimetype=pic.mimetype #borrar si no funca
+    # img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
 
     db.session.add(recipe)
     db.session.commit()
 
     return jsonify(recipe.serialize()),200
 
+@app.route('/delete_recipe/<int:id>', methods=['DELETE'])
+def delete_recipe(id):
+    recipe=Recipe.query.get(id)
+    db.session.delete(recipe)
+    db.session.commit()
+    return jsonify('Recipe deleted'),200
 
+
+##########TABLA COMMENT VALUE###############################################
+@app.route('/get_comment_value_all', methods=['GET'])
+def all_comments():
+    comment_value=Comment_Value.query.all()
+    comment_value=list(map(lambda comment_value_i:  comment_value_i.serialize(),  comment_value))
+    return jsonify(comment_value),200
+
+@app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta
+def get_one_comment_value(id):
+    comments=Comment_Value.query.filter_by(id_recipe=id).all()
+    comments=list(map(lambda comments_i: comments_i.serialize(), comments))
+    count=0
+    total=0
+    index=0
+    while index<len(comments):
+        total=comments[index]['value']+total
+        count+=1
+        index+=1
+    avg=round(total/count)
+    # print(avg)
+    return jsonify(comments,avg),200  #de la otra forma daba error  
+
+
+@app.route('/comment_value', methods=['POST'])
+def make_comment_value():
+    comment_value=Comment_Value()
+    comment_value.id_user=request.json.get("id_user")
+    comment_value.id_recipe=request.json.get("id_recipe")
+    comment_value.comment=request.json.get("comment")
+    comment_value.value=request.json.get("value")
+    
+    db.session.add(comment_value)
+    db.session.commit()
+
+    return jsonify(comment_value.serialize()),200
+
+#eliminar comment por comment id
+@app.route('/delete_comment/<int:id>', methods=['DELETE']) 
+def delete_comment(id):
+    comment=Comment_Value().query.get(id)
+    db.session.delete(comment)
+    db.session.commit()
+    return jsonify('Deleted'),200
+
+
+
+    
 
 # @app.route('/put_user/<int:id>',methods=['PUT'])
 # def put_user(id):

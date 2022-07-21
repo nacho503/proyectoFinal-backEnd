@@ -1,5 +1,6 @@
 import mailbox
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import ARRAY
 
 #instacia de sqlalchemy
 db = SQLAlchemy()
@@ -59,11 +60,13 @@ class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     def serialize(self):
         return {
             "id":self.id,
-            "id_user": self.id_User,
+            "id_user": self.id_user,
             "id_ingredient": self.id_ingredient,
+            "ingredient_quantity":self.ingredient_quantity,
             "name_recipe": self.name_recipe,
             "date_creation": self.date_creation,
             "step_by_step": self.step_by_step
+            
         }
 
 
@@ -105,7 +108,7 @@ class Comment_Value(db.Model):
     def serialize(self):
         return {
             "id":self.id,
-            "id_user": self.id_User,
+            "id_user": self.id_user,
             "id_recipe": self.id_recipe,
             "id_recipe": self.id_recipe,
             "comment": self.comment,
