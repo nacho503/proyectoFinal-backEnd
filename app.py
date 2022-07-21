@@ -121,21 +121,6 @@ def create_user():
               "msg":"wrong password format"
         }), 400   
 
-        # @app.route('/create_user',methods=['POST'])
-        # def crea_user():
-        #     user =  User()
-        #     user.name = request.json.get("name")
-        #     user.last_name = request.json.get("last_name")
-        #     user.email = request.json.get("email") 
-        #     user.country = request.json.get("country")
-        #     user.allergy = request.json.get("allergy")  
-        #     user.user_name = request.json.get("user_name")
-        #     user.password = request.json.get("password")
-
-        #     db.session.add(user)
-        #     db.session.commit()
-
-        #     return jsonify(user.serialize()),200
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
 #login user with autentication
