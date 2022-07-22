@@ -9,6 +9,8 @@ flask = "*"
 flask-migrate = "*"
 flask-cors = "*"
 psycopg2-binary = "*"
+flask-bcrypt = "*"
+flask-jwt-extended = "==3.7.0"
 
 [dev-packages]
 

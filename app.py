@@ -1,31 +1,37 @@
-from audioop import avg
-import json
-from pickle import LIST
+import os
+from audioop import avg#Ir probando e importar el resto
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingredient, Recipe, db, User, Favorite,Comment_Value #Ir probando e importar el resto
+from models import Ingredient, Recipe, db, User, Favorite,Comment_Value
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
-import os
+from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+import re
+
 
 app = Flask(__name__)
 db.init_app(app)
 CORS(app) 
 Migrate(app,db) 
+jwt = JWTManager(app)
+bcrypt = Bcrypt(app)
 
 # UPLOAD_FOLDER = '/img'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/finalProyect'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|APP CONFIG|
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_j'
+app.config['SECRET_KEY'] = 'super-secreta' #bccypt
+app.config['JWT_SECRET_KEY'] = 'mas-secreta-aun' #jwt
 
 
-
-
-
-#Funcion que revisa si la eztension es valida
+#Funcion que revisa si la extension es valida
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -47,27 +53,120 @@ def upload_file():
 def send_uploaded_file(filename=''):
     from flask import send_from_directory
     return send_from_directory(app.config["IMAGE_UPLOADS"], filename)
-################# TABLA USERS ##########################
 
+
+
+############################################ TABLA USERS #####################################
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+#get all users
 @app.route('/users',methods=['GET']) #todos los users
 def users_todos():
-    users=User.query.all()
-    users=list(map(lambda user: user.serialize(),users))
+    users = User.query.all()
+    users = list(map(lambda user: user.serialize(),users))
     return jsonify(users),200 
 
-@app.route('/create_user',methods=['POST'])
-def crea_user():
-    user = User()
-    user.name = request.json.get("name")
-    user.password = request.json.get("password")
-    user.mail = request.json.get("mail")
 
-    db.session.add(user)
-    db.session.commit()
 
-    return jsonify(user.serialize()),200
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#create a user
+email_reg = '([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+'
+password_reg = '^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$'
 
-################# TABLA FAVORITE ##########################
+
+@app.route('/user', methods=['POST'])
+def create_user():
+
+    email = request.json.get('email')
+    password = request.json.get('password')
+    last_name = request.json.get('last_name')
+    name = request.json.get("name")
+    country = request.json.get("country")
+    allergy = request.json.get("allergy")
+    user_name = request.json.get("user_name") 
+
+    if email != '' and re.search(email_reg, email):
+        user = User.query.filter_by(email = email).first()
+        if user is not None:
+          
+            return jsonify({
+                'msg':'user already exists'
+           }), 400
+
+        else:
+            if password != '' and re.search(password_reg, password):
+                user = User()
+                user.email = email
+                user.name = name
+                user.last_name = last_name
+                user.country = country
+                user.allergy = allergy
+                user.user_name = user_name
+               
+                
+                password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
+                user.password = password_hash
+
+                db.session.add(user) 
+                db.session.commit()
+
+                return  jsonify({
+                    "msg":"succes user created"
+                }),200
+            else:
+                return jsonify({
+                    "msg":"wrong password format"
+                }), 400 
+    else:
+        return jsonify({
+              "msg":"wrong password format"
+        }), 400   
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#login user with autentication
+@app.route('/login', methods=['POST'])
+def login():     
+    email = request.json.get('email')
+    password = request.json.get('password')
+    if password  == '' and email == '':
+        return jsonify({
+            "msg": 'email or password empty'
+        }),400
+    else: 
+        user = User.query.filter_by( email = email ).first()
+        if user is not  None:
+            user_password = user.password
+            check_password = bcrypt.check_password_hash(user_password, password)
+            if check_password:
+                access_token = create_access_token(identity = email)
+                return jsonify({
+                    'user': user.serialize(),
+                    'access_token': access_token
+                }), 200
+            else:
+                return jsonify ({
+                    'msg': 'email or password is invalid'
+                }), 400  
+        else:
+            return jsonify({
+                "msg": "user not found, go to register"
+            }), 400  
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+#get data of a user
+
+@app.route('/me', methods=['GET'])
+# @jwt_required()
+def me():
+    user = get_jwt_identity()       
+    return jsonify(user),200    
+
+
+
+
+############################################ TABLA FAVORITE #####################################
+
 
 @app.route('/favorites',methods=['GET']) #todos los users
 def favorites_todos():
@@ -94,15 +193,14 @@ def ingredient_todos():
     ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
     return jsonify(ingredient),200 
 
-@app.route('/create_ingredient',methods=['POST'])
-def crea_ingredient():
+
+@app.route('/crete_ingredient',methods=['POST'])
+# @jwt_required()
+def crea_ingrediente():
     ingredient = Ingredient()
-    ingredient.name_ingredient = request.json.get("name_ingredient")
-    ingredient.calories = request.json.get("calories")
-    ingredient.carbs = request.json.get("carbs")
-    ingredient.grease = request.json.get("grease")
-    ingredient.proteins = request.json.get("proteins")
-    ingredient.category = request.json.get("category")
+    ingredient.ingredient_name = request.json.get("ingredient_name")
+    ingredient.ingredient_portion = request.json.get("ingredient_portion")
+    ingredient.ingredient_measure = request.json.get("ingredient_measure")
 
     db.session.add(ingredient)
     db.session.commit()
@@ -115,21 +213,21 @@ def crea_ingredient():
 
 @app.route('/recipes',methods=['GET']) #todos los users
 def recipes_todos():
-    recipes=Recipe.query.all()
-    recipes=list(map(lambda recipe: recipe.serialize(),recipes))
+    recipes = Recipe.query.all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
     return jsonify(recipes),200 
 
 @app.route('/create_recipe',methods=['POST'])
+# @jwt_required()
 def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
     recipe.id_ingredient = request.json.get("id_ingredient")
     recipe.ingredient_quantity=request.json.get("ingredient_quantity")
     recipe.name_recipe = request.json.get("name_recipe")
+    # recipe.image_recipe=request.files['pic'] #borrar si no funca
     recipe.date_creation = request.json.get("date_creation")
     recipe.step_by_step = request.json.get("step_by_step")
-    # recipe.image_recipe=request.files['pic'] #borrar si no funca
-   
 
     # filename=secure_filename(pic.filename) #borrar si no funca
     # mimetype=pic.mimetype #borrar si no funca
@@ -159,16 +257,17 @@ def all_comments():
 def get_one_comment_value(id):
     comments=Comment_Value.query.filter_by(id_recipe=id).all()
     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
-    count=0
-    total=0
-    index=0
-    while index<len(comments):
-        total=comments[index]['value']+total
-        count+=1
-        index+=1
-    avg=round(total/count)
-    # print(avg)
-    return jsonify(comments,avg),200  #de la otra forma daba error  
+    if len(comments) !=0:
+        count=0
+        total=0
+        index=0
+        while index<len(comments):
+            total=comments[index]['value']+total
+            count+=1
+            index+=1
+        avg=round(total/count)
+        return jsonify(comments,avg),200
+    return jsonify(comments),200
 
 
 @app.route('/comment_value', methods=['POST'])
@@ -187,7 +286,7 @@ def make_comment_value():
 #eliminar comment por comment id
 @app.route('/delete_comment/<int:id>', methods=['DELETE']) 
 def delete_comment(id):
-    comment=Comment_Value().query.get(id)
+    comment=Comment_Value.query.get(id)
     db.session.delete(comment)
     db.session.commit()
     return jsonify('Deleted'),200
