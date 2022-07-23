@@ -157,7 +157,7 @@ def login():
 #get data of a user
 
 @app.route('/me', methods=['GET'])
-# @jwt_required()
+@jwt_required
 def me():
     user = get_jwt_identity()       
     return jsonify(user),200    
@@ -195,7 +195,7 @@ def ingredient_todos():
 
 
 @app.route('/crete_ingredient',methods=['POST'])
-# @jwt_required()
+@jwt_required
 def crea_ingrediente():
     ingredient = Ingredient()
     ingredient.ingredient_name = request.json.get("ingredient_name")
@@ -218,7 +218,7 @@ def recipes_todos():
     return jsonify(recipes),200 
 
 @app.route('/create_recipe',methods=['POST'])
-# @jwt_required()
+@jwt_required
 def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
@@ -253,7 +253,7 @@ def all_comments():
     comment_value=list(map(lambda comment_value_i:  comment_value_i.serialize(),  comment_value))
     return jsonify(comment_value),200
 
-@app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta
+@app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta //
 def get_one_comment_value(id):
     comments=Comment_Value.query.filter_by(id_recipe=id).all()
     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
@@ -268,6 +268,22 @@ def get_one_comment_value(id):
         avg=round(total/count)
         return jsonify(comments,avg),200
     return jsonify(comments),200
+
+# @app.route('/get_comments_avg/<int:id>', methods=['GET'])####Filtra por id de receta /get_comments_avg/
+# def get_one_comment_value(id):
+#     comments=Comment_Value.query.filter_by(id_recipe=id).all()
+#     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
+#     if len(comments) !=0:
+#         count=0
+#         total=0
+#         index=0
+#         while index<len(comments):
+#             total=comments[index]['value']+total
+#             count+=1
+#             index+=1
+#         avg=round(total/count)
+#         return jsonify(avg),200
+#     return jsonify('No avg to display'),200
 
 
 @app.route('/comment_value', methods=['POST'])

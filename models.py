@@ -1,4 +1,5 @@
 
+from email.policy import default
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -134,7 +135,7 @@ class Comment_Value(db.Model):
     id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     id_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
     comment = db.Column(db.String(250),nullable=True)
-    value = db.Column(db.Integer,nullable=True) 
+    value = db.Column(db.Integer,nullable=True,default=0) 
 
     def __repr__(self):
         return "<Comment_Value %r>" % self.comment 
