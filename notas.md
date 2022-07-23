@@ -7,6 +7,7 @@ pipenv install psycopg2-binary
 
 pip install Werkzeug==2.0.0
 pip install jinja2==3.0.3
+pip install pyjwt==v1.7.1
 
 flask db init
 flask db migrate
