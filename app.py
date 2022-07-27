@@ -195,7 +195,7 @@ def ingredient_todos():
 
 
 @app.route('/crete_ingredient',methods=['POST'])
-@jwt_required
+# @jwt_required
 def crea_ingrediente():
     ingredient = Ingredient()
     ingredient.ingredient_name = request.json.get("ingredient_name")
@@ -217,8 +217,20 @@ def recipes_todos():
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
     return jsonify(recipes),200 
 
+@app.route('/recipe_by_id/<int:id>',methods=['GET']) #usar para usuario activo
+def recipes_id(id):
+    recipes = Recipe.query.filter_by(id=id).all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
+    return jsonify(recipes),200 
+
+@app.route('/recipes_by_user/<int:id>',methods=['GET']) #usar para usuario activo
+def recipes_user_id(id):
+    recipes = Recipe.query.filter_by(id_user=id).all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
+    return jsonify(recipes),200 
+
 @app.route('/create_recipe',methods=['POST'])
-@jwt_required
+# @jwt_required
 def crea_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
