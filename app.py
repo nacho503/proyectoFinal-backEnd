@@ -1,8 +1,9 @@
+from crypt import methods
 import os
 from click import password_option
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingredient, Recipe, db, User, Favorite, Profile 
+from models import Ingredient, I_details_pantry, I_details_recipe, Recipe, db, User, Favorite, Pantry
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
@@ -106,11 +107,16 @@ def create_user():
                 password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
                 user.password = password_hash
 
+
                 db.session.add(user) 
                 db.session.commit()
 
+                access_token = create_access_token(identity = email)
+
                 return  jsonify({
-                    "msg":"succes user created"
+                    "msg":"succes user created",
+                    'user': user.serialize(),
+                    'access_token': access_token
                 }),200
             else:
                 return jsonify({
@@ -124,10 +130,13 @@ def create_user():
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
 #login user with autentication
+
 @app.route('/login', methods=['POST'])
 def login():     
+
     email = request.json.get('email')
     password = request.json.get('password')
+    
     if password  == '' and email == '':
         return jsonify({
             "msg": 'email or password empty'
@@ -137,6 +146,7 @@ def login():
         if user is not  None:
             user_password = user.password
             check_password = bcrypt.check_password_hash(user_password, password)
+
             if check_password:
                 access_token = create_access_token(identity = email)
                 return jsonify({
@@ -147,6 +157,7 @@ def login():
                 return jsonify ({
                     'msg': 'email or password is invalid'
                 }), 400  
+
         else:
             return jsonify({
                 "msg": "user not found, go to register"
@@ -158,8 +169,8 @@ def login():
 @app.route('/me', methods=['GET'])
 @jwt_required()
 def me():
-    user = get_jwt_identity()       
-    return jsonify(user),200    
+    user = get_jwt_identity()
+    return jsonify(user),200
 
 
 
@@ -184,27 +195,68 @@ def crea_favorite():
 
     return jsonify(favorite.serialize()),200
 
-################# TABLA IGREDIENTE ##########################
 
-@app.route('/ingredient',methods=['GET']) #todos los users
+
+
+################# TABLA IGREDIENTE AND PANTRY ##########################
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+@app.route('/ingredient',methods=['GET']) 
+@jwt_required()
 def ingredient_todos():
     ingredient=Ingredient.query.all()
     ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
     return jsonify(ingredient),200 
 
 
-@app.route('/crete_ingredient',methods=['POST'])
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+@app.route('/create_ingredient',methods=['POST'])
 @jwt_required()
-def crea_ingrediente():
+def create_ingrediente():
     ingredient = Ingredient()
     ingredient.ingredient_name = request.json.get("ingredient_name")
-    ingredient.ingredient_portion = request.json.get("ingredient_portion")
-    ingredient.ingredient_measure = request.json.get("ingredient_measure")
 
     db.session.add(ingredient)
     db.session.commit()
 
     return jsonify(ingredient.serialize()),200
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+@app.route('/create_details_ingrdient_recipe', methods=['POST'])
+def create_details_ingredient_recipe():
+    details_recipe = I_details_recipe()
+    details_recipe.i_details_portion = request.json.get("i_details_portion")
+    details_recipe.i_details_measure = request.json.get("i_details_measure")
+    
+    db.session.add(details_recipe)
+    db.session.commit()
+
+    return jsonify(details_recipe.serialize()),200    
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|    
+@app.route("/create_my_pantry", methods=['POST'])
+# @jwt_required()
+def create_my_pantry():
+    #pantry
+    pantry = Pantry()
+    pantry.user_id = request.json.get('user_id')
+
+    #ingredient
+    ingredient = Ingredient()
+    ingredient.ingredient_name = request.json.get("ingredient_name")
+
+    #detail ingredient
+    details_pantry = I_details_pantry()
+    details_pantry.i_details_portion = request.json.get("i_details_portion")
+    details_pantry.i_details_measure = request.json.get("i_details_measure")
+
+    db.session.add(pantry)
+    db.session.add(ingredient)
+    db.session.add(details_pantry)
+    db.session.commit()
+
+    return jsonify(pantry.serialize(),ingredient.serialize(),details_pantry.serialize()),200
 
 
 ################# TABLA RECIPE ##########################
@@ -220,12 +272,10 @@ def recipes_todos():
 @jwt_required()
 def crea_recipe():
     recipe = Recipe()
-    recipe.id_user = request.json.get("id_user")
-    recipe.id_ingredient = request.json.get("id_ingredient")
-    #ingredient_quantity=request.json.get("ingredient_quantity")
+    recipe.user_id = request.json.get("user_id")
+    recipe.ingredient_id = request.json.get("ingredient_id")
     recipe.name_recipe = request.json.get("name_recipe")
     recipe.image_recipe=request.files['pic'] #borrar si no funca
-    recipe.date_creation = request.json.get("date_creation")
     recipe.step_by_step = request.json.get("step_by_step")
 
     # filename=secure_filename(pic.filename) #borrar si no funca
