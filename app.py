@@ -223,6 +223,14 @@ def recipes_id(id):
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
     return jsonify(recipes),200 
 
+######## INTENTO DE QUERY 
+@app.route('/recipe_by_id_get_author/<int:id>',methods=['GET']) #usar para usuario activo
+def recipes_id_user_name(id):
+    recipe=Recipe.query.filter_by(id=id).first()
+    recipe_author=User.query.filter_by(id=recipe.id_user).first() 
+
+    return jsonify(recipe_author.serialize()),200 
+
 @app.route('/recipes_by_user/<int:id>',methods=['GET']) #usar para usuario activo
 def recipes_user_id(id):
     recipes = Recipe.query.filter_by(id_user=id).all()
@@ -265,9 +273,21 @@ def all_comments():
     comment_value=list(map(lambda comment_value_i:  comment_value_i.serialize(),  comment_value))
     return jsonify(comment_value),200
 
+
+    userList = users.query\
+    .join(friendships, users.id==friendships.user_id)\
+    .add_columns(users.userId, users.name, users.email, friends.userId, friendId)\
+    .filter(users.id == friendships.friend_id)\
+    .filter(friendships.user_id == userID)\
+    .paginate(page, 1, False)
+
 @app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta //
 def get_one_comment_value(id):
-    comments=Comment_Value.query.filter_by(id_recipe=id).all()
+    comments_filter=Comment_Value.query.filter_by(id_recipe=id).all()
+    comments=comments_filter\
+            .join(User,Comment_Value.id_user==User.id)\
+            .add_columns(User.user_name,User.id,Comment_Value.id,Comment_Value.comment,Comment_Value.id_recipe,Comment_Value.id_user,Comment_Value.value)\
+            .all()
     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
     if len(comments) !=0:
         count=0
