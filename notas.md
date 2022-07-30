@@ -25,3 +25,31 @@ Usuario-Receta-Ingrediente
 SELECT nombre, fecha_creacion, paso_a_paso FROM usuario JOIN receta ON usuario.id = receta.id_usuario OK
 
 'postgresql://postgres:tapi1740@localhost:5432/proyectoFinal'
+
+users: id3  
+{
+"name": "Felipe",
+"last_name": "Tapia",
+"email":"asdasdasd@asdads.com",
+"country": "chl",
+"allergy":"no",
+"user_name":"pipeT",
+"password":"456abcA!@@"
+}
+loggedUser.email = "asdasdasd@asdads.com";
+loggedUser.password = "456abcA!@@";
+
+id2
+loggedUser.email = "user2@mail.com";
+loggedUser.password = "123abcA!";
+
+id4
+{
+"name": "Andrea",
+"last_name": "Gonzalez",
+"email":"AG@asdads.com",
+"country": "chl",
+"allergy":"no",
+"user_name":"andreaG",
+"password":"789abcA!@@"
+}

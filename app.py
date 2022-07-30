@@ -274,21 +274,12 @@ def all_comments():
     return jsonify(comment_value),200
 
 
-    userList = users.query\
-    .join(friendships, users.id==friendships.user_id)\
-    .add_columns(users.userId, users.name, users.email, friends.userId, friendId)\
-    .filter(users.id == friendships.friend_id)\
-    .filter(friendships.user_id == userID)\
-    .paginate(page, 1, False)
-
 @app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta //
 def get_one_comment_value(id):
-    comments_filter=Comment_Value.query.filter_by(id_recipe=id).all()
-    comments=comments_filter\
-            .join(User,Comment_Value.id_user==User.id)\
-            .add_columns(User.user_name,User.id,Comment_Value.id,Comment_Value.comment,Comment_Value.id_recipe,Comment_Value.id_user,Comment_Value.value)\
-            .all()
+
+    comments=Comment_Value.query.filter_by(id_recipe=id).all()
     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
+
     if len(comments) !=0:
         count=0
         total=0
