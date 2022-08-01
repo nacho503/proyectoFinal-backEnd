@@ -1,6 +1,6 @@
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column
+from sqlalchemy import Column, true
 from sqlalchemy import Table
 
 
@@ -17,12 +17,10 @@ class User(db.Model):
     last_name = db.Column(db.String(50),nullable=False)
     email = db.Column(db.String(50),nullable=False, unique=True)
     country = db.Column(db.String(50),nullable=False)
-    allergy = db.Column(db.String(50),nullable=False)
+    allergy = db.Column(db.String(50))
     user_name = db.Column(db.String(50),nullable=False)
     password = db.Column(db.String(200),nullable=False, unique=True)
 
-    pantry = db.relationship('Pantry',backref="user", lazy=True)
-    recipe = db.relationship('Recipe',backref="user", lazy=True)
     favorites = db.relationship('Favorite',backref="user", lazy=True)
     comment_value=db.relationship('Comment_Value',backref="user", lazy=True)
 
@@ -63,20 +61,18 @@ class Favorite(db.Model):
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°RECIPE
 
 class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
-
     id = db.Column(db.Integer, primary_key=True)
     name_recipe = db.Column(db.String(250),nullable=False)
-    step_by_step = db.Column(db.String(250),nullable=False)
-    image_recipe=db.Column(db.Text,nullable=True)
+    portion = db.column(db.Integer, nullable=False)
+    time = db.Column(db.String, nullable=False)
 
     #relation
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    ingredient_id =  db.relationship("Ingredient" ,secondary="association_table_recipe")
     comment_value = db.relationship('Comment_Value', backref='recipe', lazy=True)
     favorite = db.relationship('Favorite', backref='recipe', lazy=True) 
 
     def __repr__(self):
-        return "<Recipe %r>" % self.name_recipe #no se cual va aqui
+        return "<Recipe %r>" % self.id
 
     def serialize(self):
         return {
@@ -84,83 +80,30 @@ class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
             "user_id": self.user_id,
             "ingredient_id": self.ingredient_id,
             "name_recipe": self.name_recipe,
-            "step_by_step": self.step_by_step
         }
 
 
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°PANTRY
-class Pantry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+class Recipe_step(db.Model):
+    id = db.Column(db.Integer, primary_kay=True)
 
     #relation
-    ingredient_id =  db.relationship("Ingredient" ,secondary="association_table_pantry")
+    step_id = db.Column(db.Integer, db.ForeignKey('step.id'))
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
+
+class Step(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    step = db.Column(db.String(1000), nullable=False)
 
     def __repr__(self):
-        return "<Pantry %r>" % self.user_id
+        return '<Step %r>' % self.id
 
     def serialize(self):
         return {
-            "id":self.id,
-            "user_id": self.user_id,
-        }
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°ASSOCIATION_TABLE_PANTRY
-
-association_table_pantry = db.Table("association_table_pantry",
-    db.Column("Pantry_id", db.ForeignKey("pantry.id"), primary_key=True),
-    db.Column("Ingredient_id", db.ForeignKey("ingredient.id"), primary_key=True),
-)
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°ASSOCIATION_TABLE_RECIPE
-
-association_table_recipe = db.Table("association_table_recipe",
-    db.Column("Recipe_id", db.ForeignKey("recipe.id"), primary_key=True),
-    db.Column("Ingredient_id", db.ForeignKey("ingredient.id"), primary_key=True),
-)
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°INGREDINT
-class Ingredient(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ingredient_name = db.Column(db.String(50),nullable=False, unique=True)
-
-    #relation
-    pantry_id =  db.relationship("Pantry" ,secondary="association_table_pantry")
-    i_details_pantry_id = db.relationship('I_details_pantry', backref='ingredient')
-    i_details_recipe_id = db.relationship('I_details_recipe', backref='ingredient')
-   
-
-    def __repr__(self):
-        return "<Ingredient %r>" % self.ingredient_name 
-
-    def serialize(self):
-        return {
-            "id":self.id,
-            "ingredient_name": self.ingredient_name,
-        }
+            'id': self.id,
+            'step': self.step
+        }    
 
 
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°I_DETAILS_PANTRY
-class I_details_pantry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    i_details_portion = db.Column(db.Integer, nullable=False)
-    i_details_measure = db.Column(db.String(50), nullable=False)   
-
-    #relation
-    ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'))   
-
-    def __repr__(self):
-        return "<I_details_pantry %r>" % self.id
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "i_details_portion": self.i_details_portion,
-            "i_details_measure": self.i_details_measure
-        }   
-
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°I_DETAILS_RECIPE
 class I_details_recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     i_details_portion = db.Column(db.Integer, nullable=False)
@@ -176,8 +119,68 @@ class I_details_recipe(db.Model):
         return {
             "id": self.id,
             "i_details_portionn": self.i_details_portion,
-            "i_details_measure": self.i_details_measure
-        }          
+            "i_details_measure": self.i_details_measure,
+            "ingredient_id": self.ingredient_id
+        }  
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°INGREDINT
+
+class Ingredient(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ingredient_name = db.Column(db.String(50),nullable=False, unique=True)
+   
+
+    def __repr__(self):
+        return "<Ingredient %r>" % self.ingredient_name 
+
+    def serialize(self):
+        return {
+            "id":self.id,
+            "ingredient_name": self.ingredient_name,
+        }
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°PANTRY
+
+class Pantry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+    def __repr__(self):
+        return "<Pantry %r>" % self.user_id
+
+    def serialize(self):
+        return {
+            "id":self.id,
+            "user_id": self.user_id,
+        }
+
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°I_DETAILS_PANTRY
+class I_details_pantry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    i_details_portion = db.Column(db.Integer, nullable=False)
+    i_details_measure = db.Column(db.String(50), nullable=False)
+
+    #foreinkey
+    ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'))
+    pantry_id = db.Column(db.Integer, db.ForeignKey('pantry.id'))
+
+
+    def __repr__(self):
+        return "<I_details_pantry %r>" % self.id
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "i_details_portion": self.i_details_portion,
+            "i_details_measure": self.i_details_measure,
+            "ingredient_id": self.ingredient_id,
+            "pantry_id": self.pantry_id,
+        }   
+        
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°COMMIT AND VALUE
