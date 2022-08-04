@@ -1,14 +1,8 @@
 """empty message
 
-<<<<<<<< HEAD:migrations/versions/67d39d7be49d_.py
-Revision ID: 67d39d7be49d
+Revision ID: 92acf30e3128
 Revises: 
-Create Date: 2022-07-29 17:57:57.435606
-========
-Revision ID: 11645e06d74a
-Revises: 
-Create Date: 2022-07-21 18:32:45.711761
->>>>>>>> dev:migrations/versions/11645e06d74a_.py
+Create Date: 2022-08-04 00:47:10.456582
 
 """
 from alembic import op
@@ -16,11 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-<<<<<<<< HEAD:migrations/versions/67d39d7be49d_.py
-revision = '67d39d7be49d'
-========
-revision = '11645e06d74a'
->>>>>>>> dev:migrations/versions/11645e06d74a_.py
+revision = '92acf30e3128'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,11 +21,6 @@ def upgrade():
     op.create_table('ingredient',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('ingredient_name', sa.String(length=50), nullable=False),
-<<<<<<<< HEAD:migrations/versions/67d39d7be49d_.py
-========
-    sa.Column('ingredient_portion', sa.Integer(), nullable=False),
-    sa.Column('ingredient_measure', sa.String(length=50), nullable=False),
->>>>>>>> dev:migrations/versions/11645e06d74a_.py
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('ingredient_name')
     )
@@ -45,27 +30,12 @@ def upgrade():
     sa.Column('last_name', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=50), nullable=False),
     sa.Column('country', sa.String(length=50), nullable=False),
-    sa.Column('allergy', sa.String(length=50), nullable=False),
+    sa.Column('allergy', sa.String(length=50), nullable=True),
     sa.Column('user_name', sa.String(length=50), nullable=False),
     sa.Column('password', sa.String(length=200), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('password')
-    )
-    op.create_table('I_details_recipe',
-    sa.Column('id', sa.Integer(), nullable=False),
-<<<<<<<< HEAD:migrations/versions/67d39d7be49d_.py
-    sa.Column('i_details_portion', sa.Integer(), nullable=False),
-    sa.Column('i_details_measure', sa.String(length=50), nullable=False),
-    sa.Column('ingredient_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['ingredient_id'], ['ingredient.id'], ),
-========
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('id_ingredient', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['id_ingredient'], ['ingredient.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
->>>>>>>> dev:migrations/versions/11645e06d74a_.py
-    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('pantry',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -76,8 +46,8 @@ def upgrade():
     op.create_table('recipe',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name_recipe', sa.String(length=250), nullable=False),
-    sa.Column('step_by_step', sa.String(length=250), nullable=False),
-    sa.Column('image_recipe', sa.Text(), nullable=True),
+    sa.Column('portion', sa.Integer(), nullable=False),
+    sa.Column('time', sa.String(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -92,7 +62,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['pantry_id'], ['pantry.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('comment__value',
+    op.create_table('comment',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('id_user', sa.Integer(), nullable=False),
     sa.Column('id_recipe', sa.Integer(), nullable=False),
@@ -105,9 +75,26 @@ def upgrade():
     op.create_table('favorite',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('id_user', sa.Integer(), nullable=False),
-    sa.Column('id_recipe', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['id_recipe'], ['recipe.id'], ),
+    sa.Column('recipe_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id_user'], ['user.id'], ),
+    sa.ForeignKeyConstraint(['recipe_id'], ['recipe.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('ingredient_recipe',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('i_details_portion', sa.Integer(), nullable=False),
+    sa.Column('i_details_measure', sa.String(length=50), nullable=False),
+    sa.Column('ingredient_id', sa.Integer(), nullable=True),
+    sa.Column('recipe_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['ingredient_id'], ['ingredient.id'], ),
+    sa.ForeignKeyConstraint(['recipe_id'], ['recipe.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('step',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('step', sa.String(length=1000), nullable=False),
+    sa.Column('recipe_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['recipe_id'], ['recipe.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
@@ -115,12 +102,13 @@ def upgrade():
 
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_table('step')
+    op.drop_table('ingredient_recipe')
     op.drop_table('favorite')
-    op.drop_table('comment__value')
+    op.drop_table('comment')
     op.drop_table('I_details_pantry')
     op.drop_table('recipe')
     op.drop_table('pantry')
-    op.drop_table('I_details_recipe')
     op.drop_table('user')
     op.drop_table('ingredient')
     # ### end Alembic commands ###
