@@ -1,5 +1,7 @@
 
+from email.policy import default
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.postgresql import ARRAY
 
 #instacia de sqlalchemy
 db = SQLAlchemy()
@@ -34,7 +36,6 @@ class User(db.Model):
             "user_name": self.user_name,
             "password": self.password
         }
-  
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°FAVORITE
@@ -51,6 +52,7 @@ class Favorite(db.Model):
             "id":self.id,
             "id_user": self.id_user,
             "recipe_id": self.recipe_id
+
         }
 
 
@@ -180,11 +182,13 @@ class I_details_pantry(db.Model):
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°COMMIT AND VALUE
 class Comment_Value(db.Model):
+    __tablename__='comment'
     id = db.Column(db.Integer, primary_key=True)
     id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     id_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
     comment = db.Column(db.String(250),nullable=True)
-    value = db.Column(db.Integer,nullable=True) 
+    value = db.Column(db.Integer,nullable=True,default=0) 
+
 
     def __repr__(self):
         return "<Comment_Value %r>" % self.comment 
@@ -192,9 +196,9 @@ class Comment_Value(db.Model):
     def serialize(self):
         return {
             "id":self.id,
-            "id_user": self.id_User,
-            "id_recipe": self.id_recipe,
+            "id_user": self.id_user,
             "id_recipe": self.id_recipe,
             "comment": self.comment,
-            "value": self.value
+            "value": self.value,
+            "user": self.user.user_name
         }
