@@ -193,14 +193,23 @@ def ingredient_todos():
     ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
     return jsonify(ingredient),200 
 
+@app.route('/ingredient_recipe_id/<int:id>',methods=['GET']) #ingredientes por receta
+def ingredient_by_recipe_id(id):
+    ingredient=Ingredient.query.filter_by(id_recipe=id).all()
+    ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
+    return jsonify(ingredient),200 
+
 
 @app.route('/crete_ingredient',methods=['POST'])
 # @jwt_required
 def crea_ingrediente():
     ingredient = Ingredient()
+    ingredient.id_recipe=request.json.get("id_recipe")
     ingredient.ingredient_name = request.json.get("ingredient_name")
-    ingredient.ingredient_portion = request.json.get("ingredient_portion")
-    ingredient.ingredient_measure = request.json.get("ingredient_measure")
+    ingredient.ingredient_weight = request.json.get("ingredient_weight")
+    ingredient.ingredient_volume = request.json.get("ingredient_volume")
+    ingredient.ingredient_quantity = request.json.get("ingredient_quantity")
+    ingredient.ingredient_unit = request.json.get("ingredient_unit")
 
     db.session.add(ingredient)
     db.session.commit()
@@ -211,7 +220,7 @@ def crea_ingrediente():
 ################# TABLA RECIPE ##########################
 
 
-@app.route('/recipes',methods=['GET']) #todos los users
+@app.route('/recipes',methods=['GET']) #todos los recipes
 def recipes_todos():
     recipes = Recipe.query.all()
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
@@ -239,19 +248,13 @@ def recipes_user_id(id):
 
 @app.route('/create_recipe',methods=['POST'])
 # @jwt_required
-def crea_recipe():
+def create_recipe():
     recipe = Recipe()
     recipe.id_user = request.json.get("id_user")
-    recipe.id_ingredient = request.json.get("id_ingredient")
-    recipe.ingredient_quantity=request.json.get("ingredient_quantity")
     recipe.name_recipe = request.json.get("name_recipe")
     # recipe.image_recipe=request.files['pic'] #borrar si no funca
     recipe.date_creation = request.json.get("date_creation")
-    recipe.step_by_step = request.json.get("step_by_step")
-
-    # filename=secure_filename(pic.filename) #borrar si no funca
-    # mimetype=pic.mimetype #borrar si no funca
-    # img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
+    recipe.steps = request.json.get("steps")
 
     db.session.add(recipe)
     db.session.commit()
