@@ -1,9 +1,5 @@
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, true
-from sqlalchemy import Table
-
-
 
 #instacia de sqlalchemy
 db = SQLAlchemy()
@@ -45,7 +41,7 @@ class User(db.Model):
 class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     id_user = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) 
-    id_recipe = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), nullable=False)
 
     def __repr__(self):
         return "<Favorite %r>" % self.id #no se cual va aqui
@@ -53,23 +49,22 @@ class Favorite(db.Model):
     def serialize(self):
         return {
             "id":self.id,
-            "id_user": self.id_User,
-            "id_recipe": self.id_recipe
+            "id_user": self.id_user,
+            "recipe_id": self.recipe_id
         }
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°RECIPE
-
-class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
+#FALTA AGREGAR COLUMNA DE IMAGEN
+class Recipe(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     name_recipe = db.Column(db.String(250),nullable=False)
-    portion = db.column(db.Integer, nullable=False)
+    portion = db.Column(db.Integer, nullable=False )
     time = db.Column(db.String, nullable=False)
 
     #relation
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     comment_value = db.relationship('Comment_Value', backref='recipe', lazy=True)
-    favorite = db.relationship('Favorite', backref='recipe', lazy=True) 
 
     def __repr__(self):
         return "<Recipe %r>" % self.id
@@ -77,22 +72,19 @@ class Recipe(db.Model): #FALTA AGREGAR COLUMNA DE IMAGEN
     def serialize(self):
         return {
             "id":self.id,
-            "user_id": self.user_id,
-            "ingredient_id": self.ingredient_id,
             "name_recipe": self.name_recipe,
+            'portion': self.portion,
+            "time": self.time,
+            "user_id": self.user_id,
         }
 
-
-class Recipe_step(db.Model):
-    id = db.Column(db.Integer, primary_kay=True)
-
-    #relation
-    step_id = db.Column(db.Integer, db.ForeignKey('step.id'))
-    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
+   
 
 class Step(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     step = db.Column(db.String(1000), nullable=False)
+
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
 
     def __repr__(self):
         return '<Step %r>' % self.id
@@ -100,27 +92,30 @@ class Step(db.Model):
     def serialize(self):
         return {
             'id': self.id,
-            'step': self.step
+            'step': self.step,
+            'recipe_id': self.recipe_id
         }    
 
 
-class I_details_recipe(db.Model):
+class Ingredient_recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     i_details_portion = db.Column(db.Integer, nullable=False)
     i_details_measure = db.Column(db.String(50), nullable=False)  
 
     #relation
     ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'))  
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
 
     def __repr__(self):
-        return "<I_details_recipe %r>" % self.id
+        return "<Ingredient_recipe %r>" % self.id
 
     def serialize(self):
         return {
             "id": self.id,
-            "i_details_portionn": self.i_details_portion,
+            "i_details_portion": self.i_details_portion,
             "i_details_measure": self.i_details_measure,
-            "ingredient_id": self.ingredient_id
+            "ingredient_id": self.ingredient_id,
+            "recipe_id": self.recipe_id
         }  
 
 

@@ -3,7 +3,7 @@ import os
 from click import password_option
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from models import Ingredient, I_details_pantry, I_details_recipe, Recipe, db, User, Favorite, Pantry
+from models import db, Ingredient, I_details_pantry, Ingredient_recipe, Recipe, User, Favorite, Pantry, Step
 from flask_cors import CORS
 from flask_migrate import Migrate
 from werkzeug.utils import secure_filename #borrar si no funca
@@ -201,7 +201,8 @@ def ingredient_todos():
     return jsonify(ingredient),200 
 
 
-
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#create ingredients
 @app.route('/create_ingredient' , methods=['POST'])
 def create_ingredient():
     ingredient = Ingredient()
@@ -214,20 +215,6 @@ def create_ingredient():
         "msg":"succes ingredient created",
         'ingredient': ingredient.serialize(),
     }),200 
-
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
-@app.route('/create_details_ingredient_recipe', methods=['POST'])
-def create_details_ingredient_recipe():
-    details_recipe = I_details_recipe()
-    details_recipe.i_details_portion = request.json.get("i_details_portion")
-    details_recipe.i_details_measure = request.json.get("i_details_measure")
-    details_recipe.ingredient_id = request.json.get("ingredient_id")
-    
-    db.session.add(details_recipe)
-    db.session.commit()
-
-    return jsonify(details_recipe.serialize()),200    
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
@@ -264,13 +251,16 @@ def create_details_ingredient_pantry():
 
     return jsonify(details_pantry.serialize()),200       
 
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|    
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|  
+# all pantrys  
 @app.route('/get_pantry',methods=['GET']) 
 def get_pantry():
     pantry=Pantry.query.all()
     pantry =list(map(lambda pantry: pantry.serialize(),pantry))
     return jsonify(pantry),200 
 
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#create pantry
 @app.route("/create_my_pantry", methods=['POST'])
 @jwt_required()
 def create_my_pantry():
@@ -293,33 +283,94 @@ def create_my_pantry():
     return jsonify(pantry.serialize()),200
 
 
-################# TABLA RECIPE ##########################
+############################## TABLA RECIPE ##################################
 
-
-@app.route('/recipes',methods=['GET']) #todos los users
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+#all recipes   
+@app.route('/recipes',methods=['GET'])
 def recipes_todos():
     recipes = Recipe.query.all()
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-    return jsonify(recipes),200 
+    return jsonify(recipes.serialize()),200 
 
-@app.route('/create_recipe',methods=['POST'])
-@jwt_required()
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#recipe
+@app.route("/create_recipe", methods=['POST'])
 def create_recipe():
-    recipe = Recipe()
-    recipe.user_id = request.json.get("user_id")
-    recipe.ingredient_id = request.json.get("ingredient_id")
-    recipe.name_recipe = request.json.get("name_recipe")
-    recipe.image_recipe=request.files['pic'] #borrar si no funca
-    recipe.step_by_step = request.json.get("step_by_step")
+    create_recipe = Recipe()
+    create_recipe.name_recipe = request.json.get('name_recipe')
+    create_recipe.portion = request.json.get('portion')
+    create_recipe.time = request.json.get('time')
+    create_recipe.user_id = request.json.get("user_id")
 
-    # filename=secure_filename(pic.filename) #borrar si no funca
-    # mimetype=pic.mimetype #borrar si no funca
-    # img = Img(img=pic.read(),mimetype=mimetype, name=filename)#borrar si no funca
-
-    db.session.add(recipe)
+    db.session.add(create_recipe)
     db.session.commit()
 
-    return jsonify(recipe.serialize()),200
+    return jsonify(create_recipe.serialize()),200 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#create step
+@app.route('/create_step', methods=['POST'])
+def create_step():
+    create_step = Step()
+    create_step.step = request.json.get('step')
+
+    recipe = Recipe.query.filter_by( user_id = request.json.get("user_id") ).first()
+    if recipe is not None:
+            create_step.recipe_id = recipe.id
+    else: 
+        return jsonify(request.json.get('user_id'))
+
+    db.session.add(create_step)
+    db.session.commit()
+
+    return jsonify(create_step.serialize()),200 
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#ingredient recipe
+@app.route('/create_details_ingredient_recipe', methods=['POST'])
+def create_details_ingredient_recipe():
+    details_recipe = Ingredient_recipe()
+    details_recipe.i_details_portion = request.json.get("i_details_portion")
+    details_recipe.i_details_measure = request.json.get("i_details_measure")
+    
+    #ingredient
+    ingredient = Ingredient.query.filter_by( ingredient_name = request.json.get("ingredient_name") ).first()
+    if ingredient is not None:
+        details_recipe.ingredient_id = ingredient.id
+    else:    
+        ingredient = Ingredient()
+        ingredient.ingredient_name = request.json.get('ingredient_name')
+
+        db.session.add(ingredient)
+        db.session.commit()
+          
+        details_recipe.ingredient_id = ingredient.id
+
+    #recipe
+    recipe = Recipe.query.filter_by( user_id = request.json.get("user_id") ).first()
+    if recipe is not None:
+            details_recipe.recipe_id = recipe.id
+    else: 
+        return jsonify(request.json.get('user_id'))
+
+
+
+    db.session.add(details_recipe)
+    db.session.commit()
+
+    return jsonify(details_recipe.serialize()),200   
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -348,6 +399,10 @@ def create_recipe():
 #     favorites=Favorite.query.all()
 #     favorites=list(map(lambda user: user.serialize(),favorites))
 #     return jsonify(favorites),200 
+
+
+
+
 
 
 if __name__ == "__main__":
