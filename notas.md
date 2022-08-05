@@ -17,13 +17,6 @@ comandos para hacer andar la bbdd:
 pipenv shell y seleccionar interprete
 python app.py
 
-Esta pendiente:
-Hacer post de otras tablas y probrar relaciones en el postgre
-
-Relaciones probadas en SQL:
-Usuario-Receta-Ingrediente
-SELECT nombre, fecha_creacion, paso_a_paso FROM usuario JOIN receta ON usuario.id = receta.id_usuario OK
-
 'postgresql://postgres:tapi1740@localhost:5432/proyectoFinal'
 
 users: id3  
@@ -52,4 +45,10 @@ id4
 "allergy":"no",
 "user_name":"andreaG",
 "password":"789abcA!@@"
+}
+
+id5
+{
+"email":"FG@asdads.com",
+"password":"789abcA!@@@"
 }
