@@ -1,5 +1,6 @@
 
 from email.policy import default
+from turtle import back
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -21,7 +22,8 @@ class User(db.Model):
 
     favorites = db.relationship('Favorite',backref="user", lazy=True)
     comment_value=db.relationship('Comment_Value',backref="user", lazy=True)
-
+    recipe=db.relationship('Recipe',backref="user",lazy=True) #Judith habia sacado este
+ 
     def __repr__(self):
         return "<User %r>" % self.email
 
@@ -63,11 +65,14 @@ class Recipe(db.Model):
     name_recipe = db.Column(db.String(250),nullable=False)
     portion = db.Column(db.Integer, nullable=False )
     time = db.Column(db.String, nullable=False)
+    # image_recipe=db.Column(db.Text,nullable=True)
 
-    #relation
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) #Judith la saco
     comment_value = db.relationship('Comment_Value', backref='recipe', lazy=True)
+    # ingredient = db.relationship('Ingredient', backref='recipe',lazy=True)
 
+    # favorite = db.relationship('Favorite', backref='recipe', lazy=True) 
     def __repr__(self):
         return "<Recipe %r>" % self.id
 
@@ -75,9 +80,10 @@ class Recipe(db.Model):
         return {
             "id":self.id,
             "name_recipe": self.name_recipe,
-            'portion': self.portion,
             "time": self.time,
+            "portion":self.portion,
             "user_id": self.user_id,
+            "user_name":self.user.user_name
         }
 
    
@@ -117,7 +123,9 @@ class Ingredient_recipe(db.Model):
             "i_details_portion": self.i_details_portion,
             "i_details_measure": self.i_details_measure,
             "ingredient_id": self.ingredient_id,
-            "recipe_id": self.recipe_id
+            "recipe_id": self.recipe_id,
+            "ingredient_name":self.inredient.ingredient_name,
+            "name_recipe":self.recipe.name_recipe
         }  
 
 
@@ -126,6 +134,7 @@ class Ingredient_recipe(db.Model):
 class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ingredient_name = db.Column(db.String(50),nullable=False, unique=True)
+    # id_recipe = db.Column(db.Integer,db.ForeignKey('recipe.id'), nullable=False) Saco judith
    
 
     def __repr__(self):
@@ -134,6 +143,7 @@ class Ingredient(db.Model):
     def serialize(self):
         return {
             "id":self.id,
+            # "id_recipe":self.id_recipe,
             "ingredient_name": self.ingredient_name,
         }
 

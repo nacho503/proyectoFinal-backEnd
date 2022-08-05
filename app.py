@@ -1,4 +1,4 @@
-from crypt import methods
+# from crypt import methods
 import os
 from audioop import avg#Ir probando e importar el resto
 from flask import Flask, request, jsonify
@@ -20,7 +20,7 @@ jwt = JWTManager(app)
 bcrypt = Bcrypt(app)
 
 # UPLOAD_FOLDER = '/img'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/finalProyect'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:tapi1740@localhost:5432/finalProyect'
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
@@ -28,7 +28,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|APP CONFIG|
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_c'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_c'
 app.config['SECRET_KEY'] = 'super-secreta' #bccypt
 app.config['JWT_SECRET_KEY'] = 'mas-secreta-aun' #jwt
 
@@ -202,6 +202,12 @@ def ingredient_todos():
     ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
     return jsonify(ingredient),200 
 
+# @app.route('/ingredient_recipe_id/<int:id>',methods=['GET']) #ingredientes por receta
+# def ingredient_by_recipe_id(id):
+#     ingredient=Ingredient.query.filter_by(id_recipe=id).all()
+#     ingredient=list(map(lambda ingredient: ingredient.serialize(),ingredient))
+#     return jsonify(ingredient),200 
+
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
 #create ingredients
@@ -264,7 +270,7 @@ def get_pantry():
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
 #create pantry
 @app.route("/create_my_pantry", methods=['POST'])
-@jwt_required()
+@jwt_required
 def create_my_pantry():
     #pantry
     pantry = Pantry()
@@ -293,28 +299,28 @@ def create_my_pantry():
 def recipes_todos():
     recipes = Recipe.query.all()
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-    return jsonify(recipes.serialize()),200 
+    return jsonify(recipes),200 
 
 
-# @app.route('/recipe_by_id/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_id(id):
-#     recipes = Recipe.query.filter_by(id=id).all()
-#     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-#     return jsonify(recipes),200 
+@app.route('/recipe_by_id/<int:id>',methods=['GET'])
+def recipes_id(id):
+    recipes = Recipe.query.filter_by(id=id).all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
+    return jsonify(recipes),200 
 
-# ######## INTENTO DE QUERY 
-# @app.route('/recipe_by_id_get_author/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_id_user_name(id):
-#     recipe=Recipe.query.filter_by(id=id).first()
-#     recipe_author=User.query.filter_by(id=recipe.id_user).first() 
 
-#     return jsonify(recipe_author.serialize()),200 
+@app.route('/recipe_by_id_get_author/<int:id>',methods=['GET'])
+def recipes_id_user_name(id):
+    recipe=Recipe.query.filter_by(id=id).first()
+    recipe_author=User.query.filter_by(id=recipe.user_id).first() 
 
-# @app.route('/recipes_by_user/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_user_id(id):
-#     recipes = Recipe.query.filter_by(id_user=id).all()
-#     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-#     return jsonify(recipes),200 
+    return jsonify(recipe_author.serialize()),200 
+
+@app.route('/recipes_by_user/<int:id>',methods=['GET'])
+def recipes_user_id(id):
+    recipes = Recipe.query.filter_by(id_user=id).all()
+    recipes = list(map(lambda recipe: recipe.serialize(),recipes))
+    return jsonify(recipes),200 
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
@@ -386,15 +392,6 @@ def create_details_ingredient_recipe():
     return jsonify(details_recipe.serialize()),200   
 
 
-
-
-
-
-
-
-
-
-
 @app.route('/delete_recipe/<int:id>', methods=['DELETE'])
 def delete_recipe(id):
     recipe=Recipe.query.get(id)
@@ -411,7 +408,7 @@ def all_comments():
     return jsonify(comment_value),200
 
 
-@app.route('/get_comment_value/<int:id>', methods=['GET'])####Filtra por id de receta //
+@app.route('/get_comment_value/<int:id>', methods=['GET'])
 def get_one_comment_value(id):
 
     comments=Comment_Value.query.filter_by(id_recipe=id).all()
@@ -429,21 +426,6 @@ def get_one_comment_value(id):
         return jsonify(comments,avg),200
     return jsonify(comments),200
 
-# @app.route('/get_comments_avg/<int:id>', methods=['GET'])####Filtra por id de receta /get_comments_avg/
-# def get_one_comment_value(id):
-#     comments=Comment_Value.query.filter_by(id_recipe=id).all()
-#     comments=list(map(lambda comments_i: comments_i.serialize(), comments))
-#     if len(comments) !=0:
-#         count=0
-#         total=0
-#         index=0
-#         while index<len(comments):
-#             total=comments[index]['value']+total
-#             count+=1
-#             index+=1
-#         avg=round(total/count)
-#         return jsonify(avg),200
-#     return jsonify('No avg to display'),200
 
 
 @app.route('/comment_value', methods=['POST'])
@@ -459,45 +441,13 @@ def make_comment_value():
 
     return jsonify(comment_value.serialize()),200
 
-#eliminar comment por comment id
+
 @app.route('/delete_comment/<int:id>', methods=['DELETE']) 
 def delete_comment(id):
     comment=Comment_Value.query.get(id)
     db.session.delete(comment)
     db.session.commit()
     return jsonify('Deleted'),200
-
-
-
-    
-
-# @app.route('/put_user/<int:id>',methods=['PUT'])
-# def put_user(id):
-#     user=User.query.get(id)
-#     user.password = request.json.get("password")
-#     user.password = request.json.get("name")
-#     db.session.add(user)
-#     db.session.commit()
-#     return jsonify(user.serialize()),200 
-
-
-# @app.route('/delete_user/<int:id>', methods=['DELETE'])
-# def delete_user(id):
-#     user=User.query.get(id)
-#     db.session.delete(user)
-#     db.session.commit()
-#     return jsonify('Borrado'),200
-
-
-###### Lo mismo pero en favorite 
-
-# @app.route('/favorites',methods=['GET']) #Get de favorites
-# def all_favorites():
-#     favorites=Favorite.query.all()
-#     favorites=list(map(lambda user: user.serialize(),favorites))
-#     return jsonify(favorites),200 
-
-
 
 
 
