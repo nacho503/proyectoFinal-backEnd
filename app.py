@@ -66,6 +66,13 @@ def users_todos():
     users = list(map(lambda user: user.serialize(),users))
     return jsonify(users),200 
 
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+
+@app.route("/a_user/<int:id>", methods=['GET'])
+def a_user(id):
+    a_user = User.query.filter_by(id = request.args.get('id'))
+    return jsonify(a_user.format(id))
+
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
 #create a user
@@ -123,7 +130,7 @@ def create_user():
     else:
         return jsonify({
               "msg":"wrong password format"
-        }), 400   
+        }), 400           
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
@@ -175,7 +182,7 @@ def me():
 ############################################ TABLA FAVORITE #####################################
 
 
-@app.route('/favorites',methods=['GET']) #todos los users
+@app.route('/favorites',methods=['GET'])
 def favorites_todos():
     favorites=Favorite.query.all()
     favorites=list(map(lambda favorite: favorite.serialize(),favorites))
