@@ -57,7 +57,8 @@ class Favorite(db.Model):
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°RECIPE
-#FALTA AGREGAR COLUMNA DE IMAGEN
+
+
 class Recipe(db.Model): 
     id = db.Column(db.Integer, primary_key=True)
     name_recipe = db.Column(db.String(250),nullable=False)
@@ -85,7 +86,6 @@ class Recipe(db.Model):
 class Step(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     step = db.Column(db.String(1000), nullable=False)
-
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
 
     def __repr__(self):
@@ -103,6 +103,7 @@ class Ingredient_recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     i_details_portion = db.Column(db.Integer, nullable=False)
     i_details_measure = db.Column(db.String(50), nullable=False)  
+    ingredient_name = db.Column(db.String(100), nullable=False)
 
     #relation
     ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'))  
@@ -117,7 +118,8 @@ class Ingredient_recipe(db.Model):
             "i_details_portion": self.i_details_portion,
             "i_details_measure": self.i_details_measure,
             "ingredient_id": self.ingredient_id,
-            "recipe_id": self.recipe_id
+            "recipe_id": self.recipe_id,
+            'ingredient_name':self.ingredient_name
         }  
 
 
