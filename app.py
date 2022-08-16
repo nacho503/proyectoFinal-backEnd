@@ -28,7 +28,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|APP CONFIG|
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_c'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgresql@localhost:5432/dev_j'
 app.config['SECRET_KEY'] = 'super-secreta' #bccypt
 app.config['JWT_SECRET_KEY'] = 'mas-secreta-aun' #jwt
 
@@ -65,6 +65,7 @@ def users_todos():
     users = User.query.all()
     users = list(map(lambda user: user.serialize(),users))
     return jsonify(users),200 
+
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
@@ -123,7 +124,7 @@ def create_user():
     else:
         return jsonify({
               "msg":"wrong password format"
-        }), 400   
+        }), 400           
 
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
@@ -175,7 +176,7 @@ def me():
 ############################################ TABLA FAVORITE #####################################
 
 
-@app.route('/favorites',methods=['GET']) #todos los users
+@app.route('/favorites',methods=['GET'])
 def favorites_todos():
     favorites=Favorite.query.all()
     favorites=list(map(lambda favorite: favorite.serialize(),favorites))
@@ -287,37 +288,44 @@ def create_my_pantry():
 
 ############################## TABLA RECIPE ##################################
 
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET|
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|GET recipe|
 #all recipes   
 @app.route('/recipes',methods=['GET'])
-def recipes_todos():
+def recipes():
     recipes = Recipe.query.all()
     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-    return jsonify(recipes.serialize()),200 
+    return jsonify(recipes),200 
 
+@app.route('/recipes_user/<int:id>',methods=['GET'])
+def recipes_user(id):
+    recipes_user = Recipe.query.filter_by(user_id = id).all()
+    recipes_user = list(map(lambda recipe: recipe.serialize(),recipes_user))
+    return jsonify(recipes_user),200     
 
-# @app.route('/recipe_by_id/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_id(id):
-#     recipes = Recipe.query.filter_by(id=id).all()
-#     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-#     return jsonify(recipes),200 
+@app.route('/get_recipe/<int:id>', methods=['GET'])
+def get_recipe(id):
+    get_recipes = Recipe.query.filter_by(id = id).first()
+    return jsonify(get_recipes.serialize()),200 
 
-# ######## INTENTO DE QUERY 
-# @app.route('/recipe_by_id_get_author/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_id_user_name(id):
-#     recipe=Recipe.query.filter_by(id=id).first()
-#     recipe_author=User.query.filter_by(id=recipe.id_user).first() 
+@app.route('/get_ingredient_recipe/<int:id>', methods=['GET'])
+def get_ingredient_recipe(id):
+    get_ingredient_recipe = Ingredient_recipe.query.filter_by(recipe_id = id).all()
+    get_ingredient_recipe = list(map(lambda i_recipe: i_recipe.serialize(),get_ingredient_recipe))
+    return jsonify(get_ingredient_recipe)
 
-#     return jsonify(recipe_author.serialize()),200 
+@app.route('/get_i_name/<int:id>', methods=['GET'])  
+def get_i_name(id):
+    get_ingredient = Ingredient.query.filter_by(id = id).first()
+    return jsonify(get_ingredient.serialize())
 
-# @app.route('/recipes_by_user/<int:id>',methods=['GET']) #usar para usuario activo
-# def recipes_user_id(id):
-#     recipes = Recipe.query.filter_by(id_user=id).all()
-#     recipes = list(map(lambda recipe: recipe.serialize(),recipes))
-#     return jsonify(recipes),200 
+@app.route('/get_step/<int:id>', methods=['GET'])
+def get_step(id ):
+    get_step = Step.query.filter_by(recipe_id = id).all()
+    get_step = list(map(lambda step: step.serialize(),get_step))
+    return jsonify(get_step)
 
-
-#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST|
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°|POST recipe|
 #recipe
 @app.route("/create_recipe", methods=['POST'])
 def create_recipe():
@@ -338,12 +346,7 @@ def create_recipe():
 def create_step():
     create_step = Step()
     create_step.step = request.json.get('step')
-
-    recipe = Recipe.query.filter_by( user_id = request.json.get("user_id") ).first()
-    if recipe is not None:
-            create_step.recipe_id = recipe.id
-    else: 
-        return jsonify(request.json.get('user_id'))
+    create_step.recipe_id = request.json.get('recipe_id')
 
     db.session.add(create_step)
     db.session.commit()
@@ -357,11 +360,13 @@ def create_details_ingredient_recipe():
     details_recipe = Ingredient_recipe()
     details_recipe.i_details_portion = request.json.get("i_details_portion")
     details_recipe.i_details_measure = request.json.get("i_details_measure")
+    details_recipe.recipe_id = request.json.get('recipe_id')
     
     #ingredient
     ingredient = Ingredient.query.filter_by( ingredient_name = request.json.get("ingredient_name") ).first()
     if ingredient is not None:
         details_recipe.ingredient_id = ingredient.id
+        details_recipe.ingredient_name = ingredient.ingredient_name
     else:    
         ingredient = Ingredient()
         ingredient.ingredient_name = request.json.get('ingredient_name')
@@ -370,29 +375,13 @@ def create_details_ingredient_recipe():
         db.session.commit()
           
         details_recipe.ingredient_id = ingredient.id
-
-    #recipe
-    recipe = Recipe.query.filter_by( user_id = request.json.get("user_id") ).first()
-    if recipe is not None:
-            details_recipe.recipe_id = recipe.id
-    else: 
-        return jsonify(request.json.get('user_id'))
-
+        details_recipe.ingredient_name = ingredient.ingredient_name
 
 
     db.session.add(details_recipe)
     db.session.commit()
 
     return jsonify(details_recipe.serialize()),200   
-
-
-
-
-
-
-
-
-
 
 
 @app.route('/delete_recipe/<int:id>', methods=['DELETE'])
